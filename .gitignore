@@ -1,4 +1,5 @@
-recordings/copy_data
-recordings/test
-recordings/train
-recordings/valid
+data/recordings/copy_data
+data/recordings/test
+data/recordings/train
+data/recordings/valid
+data/.svn
