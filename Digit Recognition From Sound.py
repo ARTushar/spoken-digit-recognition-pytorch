@@ -11,6 +11,7 @@ from scipy.io import wavfile
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from random import shuffle
+import librosa
 import torch.nn as nn, torch.nn.functional as F, torch.optim as optim
 
 
@@ -137,7 +138,7 @@ class AudioDigitDataset(Dataset):
             file = self.files[idx]
             label = file[0]
             audio_name = os.path.join(self.root_dir, self.files[idx])
-            spectrog = self._convert_wav_to_spectrogram(audio_name)
+            spectrog = self._wav2mfcc(audio_name)
             if self.transform:
                 spectrog = self.transform(spectrog)
             
@@ -149,6 +150,14 @@ class AudioDigitDataset(Dataset):
         freq, times, spectrogram = signal.spectrogram(samples, sample_rate)
 #         self._show_spectrogram(spectrogram, times, freq)
         return spectrogram
+
+    def _wav2mfcc(self, file_path, max_pad_len=20):
+        wave, sr = librosa.load(file_path, mono=True, sr=None)
+        wave = wave[::3]
+        mfcc = librosa.feature.mfcc(wave, sr=8000)
+        pad_width = max_pad_len - mfcc.shape[1]
+        mfcc = np.pad(mfcc, pad_width=((0, 0), (0, pad_width)), mode='constant')
+        return mfcc
     
 #     def _show_spectrogram(self, spectrogram, times, freq):
 #         plt.pcolormesh(times, freq, spectrogram)
@@ -265,18 +274,18 @@ class ToTensor(object):
 
 # defining datasets and dataloaders
 
-img_width, img_height = 128, 32
-rs = 256
+img_width, img_height = 64, 64
+rs = 64
 
-custom_transform = transforms.Compose([Rescale(rs), RandomCrop((img_width, img_height)), ToTensor()])
+custom_transform = transforms.Compose([Rescale(rs), ToTensor()])
 
 train_dataset = AudioDigitDataset(train_data, transform=custom_transform)
 valid_dataset = AudioDigitDataset(valid_data, transform=custom_transform)
 test_dataset = AudioDigitDataset(test_data, transform=custom_transform)
 
-train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True, num_workers=4)
-valid_loader = DataLoader(valid_dataset, batch_size=2, shuffle=True, num_workers=4)
-test_loader = DataLoader(test_dataset, batch_size=2, shuffle=True, num_workers=4)
+train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4)
+valid_loader = DataLoader(valid_dataset, batch_size=16, shuffle=True, num_workers=4)
+test_loader = DataLoader(test_dataset, batch_size=16, shuffle=True, num_workers=4)
 
 
 # dataiter = iter(train_loader)
@@ -394,13 +403,12 @@ for epoch in range(total_epochs):
     vrunning_loss /= k
     valid_losses.append(vrunning_loss)
     
-    
-    print('Epoch#{:d} train loss: {:.3f} valid loss: {:.3f}'.format(epoch+1, running_loss, vrunning_loss), end=' ')    
-   
+       
     accuracy = calculate_accuracy(valid_loader, net)
     valid_accuracy.append(accuracy)
     train_accuracy.append(calculate_accuracy(train_loader, net))
-
+    
+    print('Epoch#{:d} train loss: {:.3f} valid loss: {:.3f}'.format(epoch+1, running_loss, vrunning_loss), end=' ')
     print('valid accuracy: {:.3f} %'.format(accuracy))
     
             
@@ -420,7 +428,7 @@ print('Accuracy of the network on the test datasets: {:.3f} %'.format(calculate_
 # help(torch.max)
 
 
-# In[24]:
+# In[22]:
 
 
 def plot_loss(train_data, val_data, type):
@@ -436,7 +444,7 @@ def plot_loss(train_data, val_data, type):
     plt.legend()
 
 
-# In[25]:
+# In[23]:
 
 
 plot_loss(train_losses, valid_losses, 'loss')
@@ -446,7 +454,6 @@ plt.show()
 
 
 # In[ ]:
-
 
 
 
