@@ -54,7 +54,7 @@ def preprocess_dataset():
     
     for name in numbers_dir:
         files = os.listdir(os.path.join(copy_data, name))
-        shuffle(files)
+#         shuffle(files)
         test_total = len(files) * 20 // 100
         train_total = (len(files) - test_total) * 85 // 100
         valid_total = len(files) - test_total - train_total
@@ -385,7 +385,7 @@ for epoch in range(total_epochs):
     train_losses.append(running_loss)
     
     
-    # validitaing phase
+    # validating phase
     vrunning_loss = 0.0
     k = 0
     for i, data in enumerate(valid_loader, 0):
@@ -404,19 +404,20 @@ for epoch in range(total_epochs):
     valid_losses.append(vrunning_loss)
     
        
-    accuracy = calculate_accuracy(valid_loader, net)
-    valid_accuracy.append(accuracy)
-    train_accuracy.append(calculate_accuracy(train_loader, net))
+    v_accuracy = calculate_accuracy(valid_loader, net)
+    t_accuracy = calculate_accuracy(train_loader, net)
+    valid_accuracy.append(v_accuracy)
+    train_accuracy.append(t_accuracy)
     
     print('Epoch#{:d} train loss: {:.3f} valid loss: {:.3f}'.format(epoch+1, running_loss, vrunning_loss), end=' ')
-    print('valid accuracy: {:.3f} %'.format(accuracy))
+    print('valid accuracy: {:.3f} % train accuracy: {:.3f}'.format(v_accuracy, t_accuracy))
     
             
 print('Finished Training')
         
 
 
-# In[21]:
+# In[17]:
 
 
 print('Accuracy of the network on the test datasets: {:.3f} %'.format(calculate_accuracy(test_loader, net))) 
@@ -428,7 +429,7 @@ print('Accuracy of the network on the test datasets: {:.3f} %'.format(calculate_
 # help(torch.max)
 
 
-# In[22]:
+# In[19]:
 
 
 def plot_loss(train_data, val_data, type):
@@ -436,7 +437,7 @@ def plot_loss(train_data, val_data, type):
     epochs = range(1, len(train_data) + 1)
     
     plt.figure()
-    plt.plot(epochs, train_data, 'bo', label='Training' + type)
+    plt.plot(epochs, train_data, 'bo', label='Training ' + type)
     plt.plot(epochs, val_data, 'b', label='Validation ' + type)
     plt.title('Training and Validation '+type)
     plt.xlabel('Epochs')
@@ -444,13 +445,19 @@ def plot_loss(train_data, val_data, type):
     plt.legend()
 
 
-# In[23]:
+# In[20]:
 
 
 plot_loss(train_losses, valid_losses, 'loss')
-plot_loss(train_accuracy, train_accuracy, 'accuracy')
+plot_loss(train_accuracy, valid_accuracy, 'accuracy')
 
 plt.show()
+
+
+# In[24]:
+
+
+torch.save(net.state_dict(), './model/mymodel')
 
 
 # In[ ]:
