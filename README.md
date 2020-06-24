@@ -6,3 +6,8 @@
 
 Original project link: https://github.com/adhishthite/sound-mnist
 
+
+My results:
+
+![Alt text](./plots.png?raw=true "Results")
+
